@@ -1,0 +1,6 @@
+local Library = require(game.ReplicatedStorage.Library.Library)
+local LoaderService = Library.getService("LoaderService")
+local TableService = Library.getService("TableService")
+local StringService = Library.getService("StringService")
+local ModuleService = Library.getService("ModuleService")
+local TaskService = Library.getService("TaskService")
