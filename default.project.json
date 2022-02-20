@@ -24,6 +24,10 @@
         "Services": {
           "$className": "Services",
           "$path": "src/server/Library/Services"
+        },
+        "Templates": {
+          "$className": "Templates",
+          "$path": "src/server/Library/Templates"
         }
       }
     },
@@ -37,6 +41,10 @@
         "Services": {  
           "$className": "Services",
           "$path": "src/shared/Library/Services"
+        },
+        "Templates": {
+          "$className": "Templates",
+          "$path": "src/shared/Library/Templates"
         }
       }
     }

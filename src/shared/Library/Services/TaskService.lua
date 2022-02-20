@@ -19,8 +19,8 @@ function class.getById(_id : ObjectValue)
 end
 
 -- Creates a task.
--- @param delay Delay to run. (OPTIONAL = NIL)
--- @param every Runs every declared time. (OPTIONAL = NIL)
+-- @param delay Delay(seconds) to run. (OPTIONAL = NIL)
+-- @param every Runs every declared time(seconds). (OPTIONAL = NIL)
 -- @return Task.
 function class.create(_delay : number, _every : number, _consumer : ObjectValue)
     -- Object nil checks.
