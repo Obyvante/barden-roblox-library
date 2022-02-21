@@ -5,6 +5,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 -- STARTS
 
+
 -- VARIABLES
 local _content = {}
 
@@ -16,6 +17,20 @@ function class.getById(_id : ObjectValue)
     -- Object nil checks.
     assert(_id ~= nil, "Task id cannot be null")
     return _content[_id]
+end
+
+-- Creates a delayed task.
+-- @param delay Delay(seconds) to run. (OPTIONAL = NIL)
+-- @return Task.
+function class.createDelayed(_delay : number, _consumer : ObjectValue)
+    return class.create(_delay, nil, _consumer)
+end
+
+-- Creates a repeating task.
+-- @param every Runs every declared time(seconds). (OPTIONAL = NIL)
+-- @return Task.
+function class.createRepeating(_every : number, _consumer : ObjectValue)
+    return class.create(nil, _every, _consumer)
 end
 
 -- Creates a task.
@@ -30,8 +45,12 @@ function class.create(_delay : number, _every : number, _consumer : ObjectValue)
     if _delay and _delay <= 0 then error("Task delay must be higher than 0") end
     if _every and _every <= 0 then error("Task every must be higher than 0") end
 
+    -- Individual imports.
+    local Metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata", 999))
+
     -- Creates a task object.
     local _task = {
+        ["metadata"] = Metadata.new(),
         ["id"] = HttpService:GenerateGUID(false),
 
         ["delay"] = _delay,
@@ -55,8 +74,14 @@ function class.create(_delay : number, _every : number, _consumer : ObjectValue)
 
     _content[_task.id] = _task
 
-    -- Creates a task, sets metatable and returns it.
+    -- Sets metatable and returns it.
     return setmetatable(_task, class)
+end
+
+-- Gets task metadata.
+-- @return Metadata.
+function class:getMetadata()
+    return self.metadata
 end
 
 -- Gets task id.
@@ -222,7 +247,7 @@ function class:cancel()
     _content[self.id] = nil
 
 	self.running = false
-
+    self.metadata:reset()
 	self.heartbeat:Disconnect()
 
     -- If there is a cancel consumer, runs it.

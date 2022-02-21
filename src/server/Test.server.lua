@@ -5,5 +5,6 @@ local TableService = Library.getService("TableService")
 local StringService = Library.getService("StringService")
 local ModuleService = Library.getService("ModuleService")
 local TaskService = Library.getService("TaskService")
+local SignalService = Library.getService("SignalService")
 -- TEMPLATES
 local MetadataTemplate = Library.getTemplate("Metadata")

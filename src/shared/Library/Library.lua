@@ -8,39 +8,54 @@ local RunService = game:GetService("RunService")
 local _services = {}
 local _templates = {}
 
--- Loads services by its path.
+
+-- Saves service.
+-- @param _instance Instance(Module Script) to save.
+function class.saveService(_instance : Instance)
+    -- Object nil checks.
+    assert(_instance ~= nil, "Instance to search in cannot be null")
+    assert(_services[_instance.Name] == nil, "More than one module script is using the name: " .. _instance.Name)
+    assert(_instance:IsA("ModuleScript"), "Tried to save not module script service(" .. _instance.Name .. ")")
+
+    -- Saves instance(service) to distionary.
+    _services[_instance.Name] = _instance
+end
+
+-- Saves services inside of the instance.
 -- @param _instance Instance to search in.
-function loadService(_instance : Instance)
+function class.saveServices(_instance : Instance)
     -- Object nil checks.
     assert(_instance ~= nil, "Instance to search in cannot be null")
 
-    -- Saves service into the 
     for _, descendant in ipairs(_instance:GetDescendants()) do
         if not descendant:IsA("ModuleScript") then continue end
-
-        -- Checks if the module script is already registered or not.
-        assert(_services[descendant.Name] == nil, "More than one module script is using the name: " .. descendant.Name)
-
-        -- Saves descendant to distionary.
-        _services[descendant.Name] = descendant
+        -- Saves service.
+        class.saveService(descendant)
     end
 end
 
--- Loads services by its path.
+-- Saves template.
+-- @param _instance Instance(Module Script) to save.
+function class.saveTemplate(_instance : Instance)
+    -- Object nil checks.
+    assert(_instance ~= nil, "Instance to search in cannot be null")
+    assert(_templates[_instance.Name] == nil, "More than one module script is using the name: " .. _instance.Name)
+    assert(_instance:IsA("ModuleScript"), "Tried to save not module script template(" .. _instance.Name .. ")")
+
+    -- Saves instance(template) to distionary.
+    _templates[_instance.Name] = _instance
+end
+
+-- Saves templates inside of the instance.
 -- @param _instance Instance to search in.
-function loadTemplate(_instance : Instance)
+function class.saveTemplates(_instance : Instance)
     -- Object nil checks.
     assert(_instance ~= nil, "Instance to search in cannot be null")
 
-    -- Saves service into the 
     for _, descendant in ipairs(_instance:GetDescendants()) do
         if not descendant:IsA("ModuleScript") then continue end
-
-        -- Checks if the module script is already registered or not.
-        assert(_templates[descendant.Name] == nil, "More than one module script is using the name: " .. descendant.Name)
-
-        -- Saves descendant to distionary.
-        _templates[descendant.Name] = descendant
+        -- Saves service.
+        class.saveTemplate(descendant)
     end
 end
 
@@ -70,13 +85,13 @@ end
 
 -- Handles client and server side libraries.
 if RunService:IsClient() then
-    loadService(game:GetService("ReplicatedStorage"):WaitForChild("Library"):WaitForChild("Services"))
-    loadTemplate(game:GetService("ReplicatedStorage"):WaitForChild("Library"):WaitForChild("Templates"))
+    class.saveServices(game:GetService("ReplicatedStorage"):WaitForChild("Library"):WaitForChild("Services"))
+    class.saveTemplates(game:GetService("ReplicatedStorage"):WaitForChild("Library"):WaitForChild("Templates"))
 elseif RunService:IsServer() then
-    loadService(game.ReplicatedStorage.Library.Services)
-    loadService(game.ServerScriptService.Library.Services)
-    loadTemplate(game.ReplicatedStorage.Library.Templates)
-    loadTemplate(game.ServerScriptService.Library.Templates)
+    class.saveServices(game.ReplicatedStorage.Library.Services)
+    class.saveServices(game.ServerScriptService.Library.Services)
+    class.saveTemplates(game.ReplicatedStorage.Library.Templates)
+    class.saveTemplates(game.ServerScriptService.Library.Templates)
 end
 
 -- Informs console that library has been loaded.

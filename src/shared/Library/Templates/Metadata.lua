@@ -2,6 +2,7 @@ local class = {}
 class.__index = class
 -- IMPORTS
 local TaskService = require(script.Parent.Parent:WaitForChild("Services"):WaitForChild("TaskService", 999))
+local StringService = require(script.Parent.Parent:WaitForChild("Services"):WaitForChild("StringService", 999))
 -- STARTS
 
 
@@ -12,7 +13,9 @@ local EXPIRE_SUFFIX = "[=!:expirable:!=]"
 -- Creates a metadata module.
 -- @return Created metadata module.
 function class.new()
-    return setmetatable({ _content = {} }, class)
+    return setmetatable({
+        ["_content"] = {}
+    }, class)
 end
 
 -- Converts key to the expirable key.
@@ -106,6 +109,16 @@ end
 function class:remove(_key : ObjectValue)
     self._content[_key] = nil
     return self
+end
+
+-- Destroys metadata.
+function class:reset()
+    for key, value in pairs(self._content) do
+        if not StringService.endsWith(key, EXPIRE_SUFFIX) then continue end
+        -- Cancels expire task.
+        value:cancel()
+    end
+    self._content = {}
 end
 
 
