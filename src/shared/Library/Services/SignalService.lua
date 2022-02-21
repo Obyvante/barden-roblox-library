@@ -48,6 +48,15 @@ function class.create(_id : string)
     return setmetatable(_signal, class)
 end
 
+-- Gets signal metadata.
+-- @return Metadata.
+function class:getMetadata()
+    if not self.metadata then
+        self.metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata")).new()
+    end
+    return self.metadata
+end
+
 -- Gets signal id.
 -- @return Signal service id.
 function class:getId()
@@ -109,6 +118,7 @@ end
 -- Destroys signal service.
 function class:destroy()
     self.exsist = false
+    if self.metadata then self.metadata:reset() end
     self.event:Destroy()
 
     _content[self.id] = nil

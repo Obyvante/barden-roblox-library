@@ -45,12 +45,8 @@ function class.create(_delay : number, _every : number, _consumer : ObjectValue)
     if _delay and _delay <= 0 then error("Task delay must be higher than 0") end
     if _every and _every <= 0 then error("Task every must be higher than 0") end
 
-    -- Individual imports.
-    local Metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata", 999))
-
     -- Creates a task object.
     local _task = {
-        ["metadata"] = Metadata.new(),
         ["id"] = HttpService:GenerateGUID(false),
 
         ["delay"] = _delay,
@@ -81,6 +77,9 @@ end
 -- Gets task metadata.
 -- @return Metadata.
 function class:getMetadata()
+    if not self.metadata then
+        self.metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata")).new()
+    end
     return self.metadata
 end
 
@@ -247,7 +246,7 @@ function class:cancel()
     _content[self.id] = nil
 
 	self.running = false
-    self.metadata:reset()
+    if self.metadata then self.metadata:reset() end
 	self.heartbeat:Disconnect()
 
     -- If there is a cancel consumer, runs it.

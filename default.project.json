@@ -38,6 +38,10 @@
       "Library": {
         "$className": "Library",
         "$path": "src/shared/Library",
+        "Interface": {  
+          "$className": "Interface",
+          "$path": "src/shared/Library/Interface"
+        },
         "Services": {  
           "$className": "Services",
           "$path": "src/shared/Library/Services"
