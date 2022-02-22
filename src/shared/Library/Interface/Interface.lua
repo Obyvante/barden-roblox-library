@@ -77,10 +77,12 @@ function class:addElement(_data : string)
     return element
 end
 
--- Builds interface for player.
--- @param player Roblox player.
-function class:build(player : Player)
-    self.screen.Parent = player.PlayerGui
+-- Builds interface for declared instance.
+-- @param instance Instance to build in.
+function class:build(instance : Instance)
+    -- Object nil checks.
+    assert(instance ~= nil, "Interface(" .. self.id .. ") instance cannot be null")
+    self.screen.Parent = instance
 end
 
 

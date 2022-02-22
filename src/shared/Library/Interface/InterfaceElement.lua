@@ -44,6 +44,17 @@ function class.new(_interface : ModuleScript, _data : table, _parent : Folder)
         end
     end
 
+    -- Adds builds to the created instance.
+    if _data.BuildWith then
+        for _, _build in ipairs(_data.BuildWith) do
+            if _build == "AspectRatio" then
+                _element:addAspectRatio()
+            else
+                warn(_element:getLogPrefix() .. " build with(" .. _build .. ") is not exsist")
+            end
+        end
+    end
+
     return _element
 end
 
@@ -163,6 +174,21 @@ function class:addElement(_data : string)
     self.elements[_id] = element
 
     return element
+end
+
+-- Adds configured aspect ratio to interface element.
+-- @return Interface element. (BUILDER)
+function class:addAspectRatio()
+    self:addElement({
+        Type = "UIAspectRatioConstraint",
+        Name = "AspectRatio",
+        Properties = {
+            AspectRatio = self.instance.AbsoluteSize.X / self.instance.AbsoluteSize.Y,
+            AspectType = "FitWithinMaxSize",
+            DominantAxis = "Width"
+        }
+    })
+    return self
 end
 
 -- Destroys interface element.
