@@ -298,6 +298,8 @@ function class:destroy()
 
     -- Removes interface element from the parent elements list.
     self:getParent():getElements()[self.id] = nil
+
+    setmetatable(self, nil)
 end
 
 

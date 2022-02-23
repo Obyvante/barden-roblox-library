@@ -4,6 +4,7 @@ class.__index = class
 local InterfaceElement = require(script.Parent:WaitForChild("InterfaceElement"))
 -- STARTS
 
+
 -------------
 -- TODO: will add static dictionary.
 -- with this, we can get by its id and garbage collector
@@ -92,12 +93,31 @@ function class:addElement(_data : string)
     return element
 end
 
--- Builds interface for declared instance.
--- @param instance Instance to build in.
-function class:build(instance : Instance)
+-- Binds interface to target instance.
+-- @param instance Instance to bind to.
+function class:bind(instance : Instance)
     -- Object nil checks.
     assert(instance ~= nil, "Interface(" .. self.id .. ") instance cannot be null")
+
+    self.parent = instance
     self.screen.Parent = instance
+end
+
+-- Unbinds interface.
+function class:unbind()
+    if self.parent == nil then return end
+    self.parent = nil
+    self.screen.Parent = nil
+end
+
+-- Destroys interface.
+function class:destroy()
+    if self.metadata then self.metadata:reset() end
+    for _, value in pairs(self.elements) do value:destroy() end
+
+    self.screen:Destroy()
+
+    setmetatable(self, nil)
 end
 
 

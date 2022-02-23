@@ -111,7 +111,7 @@ function class:remove(_key : ObjectValue)
     return self
 end
 
--- Destroys metadata.
+-- Resets metadata.
 function class:reset()
     for key, value in pairs(self._content) do
         if not StringService.endsWith(key, EXPIRE_SUFFIX) then continue end

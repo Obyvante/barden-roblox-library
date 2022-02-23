@@ -9,6 +9,19 @@ local _services = {}
 local _templates = {}
 
 
+-- Saves templates inside of the instance.
+-- @param _instance Instance to search in.
+function class.saveTemplates(_instance : Instance)
+    -- Object nil checks.
+    assert(_instance ~= nil, "Instance to search in cannot be null")
+
+    for _, descendant in ipairs(_instance:GetDescendants()) do
+        if not descendant:IsA("ModuleScript") then continue end
+        -- Saves service.
+        class.saveTemplate(descendant)
+    end
+end
+
 -- Saves service.
 -- @param _instance Instance(Module Script) to save.
 function class.saveService(_instance : Instance)
@@ -34,6 +47,16 @@ function class.saveServices(_instance : Instance)
     end
 end
 
+-- Gets template by its name.
+-- @param _name Template name.
+-- @return Template. [CLASS]
+function class.getTemplate(_name : string)
+    -- Object nil checks.
+    assert(_name ~= nil, "Template name cannot be null")
+	assert(_templates[_name], "Invalid template name: " .. _name)
+	return require(_templates[_name])
+end
+
 -- Saves template.
 -- @param _instance Instance(Module Script) to save.
 function class.saveTemplate(_instance : Instance)
@@ -46,19 +69,6 @@ function class.saveTemplate(_instance : Instance)
     _templates[_instance.Name] = _instance
 end
 
--- Saves templates inside of the instance.
--- @param _instance Instance to search in.
-function class.saveTemplates(_instance : Instance)
-    -- Object nil checks.
-    assert(_instance ~= nil, "Instance to search in cannot be null")
-
-    for _, descendant in ipairs(_instance:GetDescendants()) do
-        if not descendant:IsA("ModuleScript") then continue end
-        -- Saves service.
-        class.saveTemplate(descendant)
-    end
-end
-
 -- Gets service by its name.
 -- @param _name Service name.
 -- @return Service. [CLASS]
@@ -67,16 +77,6 @@ function class.getService(_name : string)
     assert(_name ~= nil, "Service name cannot be null")
 	assert(_services[_name], "Invalid service name: " .. _name)
 	return require(_services[_name])
-end
-
--- Gets template by its name.
--- @param _name Template name.
--- @return Template. [CLASS]
-function class.getTemplate(_name : string)
-    -- Object nil checks.
-    assert(_name ~= nil, "Template name cannot be null")
-	assert(_templates[_name], "Invalid template name: " .. _name)
-	return require(_templates[_name])
 end
 
 ----------

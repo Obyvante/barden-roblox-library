@@ -9,7 +9,3 @@ local SignalService = Library.getService("SignalService")
 local InterfaceService = Library.getService("InterfaceService")
 -- TEMPLATES
 local MetadataTemplate = Library.getTemplate("Metadata")
-
--- UIs
-local ChallangeUI = require(game:GetService("ReplicatedStorage").Interfaces.Challange.Challange)
-ChallangeUI.create(game.Players.LocalPlayer)

@@ -4,14 +4,8 @@ local class = {}
 
 -- VARIABLES
 local DEFAULTS = {
-    PC = {
-        X = 3840,
-        Y = 2160
-    },
-    MOBILE = {
-        X = 1366,
-        Y = 1024
-    }
+    PC = Vector2.new(3840, 2160),
+    MOBILE = Vector2.new(1366, 1024)
 }
 
 
@@ -67,16 +61,6 @@ function class.toRatioY(_device : string, _size : number)
     assert(_device ~= nil, "Device cannot be null")
     assert(_size ~= nil, "Size cannot be null")
     return _size / DEFAULTS[_device].Y
-end
-
-function class.ScaleToOffset(Scale)
-	local ViewPortSize = workspace.Camera.ViewportSize
-	return ({ViewPortSize.X * Scale[1],ViewPortSize.Y * Scale[2]})
-end
-
-function class.OffsetToScale(Offset)
-	local ViewPortSize = workspace.Camera.ViewportSize
-	return ({Offset[1] / ViewPortSize.X, Offset[2] / ViewPortSize.Y})
 end
 
 
