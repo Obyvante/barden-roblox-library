@@ -1,6 +1,7 @@
 local class = {}
 class.__index = class
 -- IMPORTS
+local TableService = require(script.Parent.Parent:WaitForChild("Services"):WaitForChild("TableService"))
 local Metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata"))
 -- STARTS
 
@@ -32,9 +33,7 @@ function class.new(_interface : ModuleScript, _data : table, _parent : Folder)
 
     -- Adds properties to the created instance.
     if _data.Properties then
-        for key, value in pairs(_data.Properties) do
-            instance[key] = value
-        end
+        _element:updateProperties(_data.Properties)
     end
 
     -- Adds events to the created instance.
@@ -97,13 +96,95 @@ function class:getInstance()
     return self.instance
 end
 
+-- Gets interface element properties.
+-- @return Interface element properties.
+function class:getProperties()
+    return self.properties
+end
+
 -- Updates interface element instance.
 -- @param _properties Interface element instance properties.
 -- @return Interface element. (BUILDER)
 function class:updateProperties(_properties : table)
     -- Object nil checks.
     assert(_properties ~= nil, self:getLogPrefix() .. " properties cannot be null[update properties]")
-    for key, value in pairs(_properties) do self.instance[key] = value end
+    self.properties = TableService.deepCopy(_properties)
+
+    -- Saves properties to the instance.
+    for key, value in pairs(_properties) do
+        -- If it is custom property, no need to continue.
+        if key == "Custom" then continue end
+
+        self.instance[key] = value
+    end
+
+    -- Handls custom properties.
+    if _properties.Custom then
+        -- Declares required fields.
+        local viewport = self.interface:getViewport()
+        local anchor_point = _properties.AnchorPoint
+        local should_calculate_anchor = anchor_point ~= nil and (anchor_point.X ~= 0 or anchor_point.Y ~= 0)
+        local has_parent = self.parent ~= nil
+        local parent_properties, parent_properties_custom
+        if has_parent then
+            parent_properties = self.parent:getProperties()
+            parent_properties_custom = parent_properties.Custom
+        end
+
+        -- Handles custom size.
+        if _properties.Custom.Size then
+            local _data = _properties.Custom.Size
+            local X, Y
+
+            if has_parent then
+                local parent_size = parent_properties_custom.Size
+
+                X = _data.X / parent_size.X
+                Y = _data.Y / parent_size.Y
+            else
+                X = _data.X / viewport.X
+                Y = _data.Y / viewport.Y
+            end
+
+            self.instance.Size = UDim2.fromScale(X, Y)
+        end
+        
+
+        -- Handles custom size.
+        if _properties.Custom.Position then
+            local _data = _properties.Custom.Position
+            local X, Y
+                
+            if has_parent then
+                local parent_size = parent_properties_custom.Size
+
+                if should_calculate_anchor then
+                    X = _data.X + (_properties.Custom.Size.X * anchor_point.X)
+                    Y = _data.Y + (_properties.Custom.Size.Y * anchor_point.Y)
+
+                    X = X / parent_size.X
+                    Y = Y / parent_size.Y
+                else
+                    X = _data.X / parent_size.X
+                    Y = _data.Y / parent_size.Y
+                end
+            else
+                if should_calculate_anchor then
+                    X = _data.X + (_properties.Custom.Size.X * anchor_point.X)
+                    Y = _data.Y + (_properties.Custom.Size.Y * anchor_point.Y)
+
+                    X = X / viewport.X
+                    Y = Y / viewport.Y
+                else
+                    X = _data.X / viewport.X
+                    Y = _data.Y / viewport.Y
+                end
+            end
+
+            self.instance.Position = UDim2.fromScale(X, Y)
+        end
+    end
+
     return self
 end
 
@@ -150,6 +231,12 @@ function class:unbindEvent(_id : string)
     return self
 end
 
+-- Gets interface elements.
+-- @return Interface elements.
+function class:getElements()
+    return self.elements
+end
+
 -- Gets interface element by its id.
 -- @param _id Interface element id.
 -- @return Interface element. (NULLABLE)
@@ -179,11 +266,22 @@ end
 -- Adds configured aspect ratio to interface element.
 -- @return Interface element. (BUILDER)
 function class:addAspectRatio()
+    -- Gets abosule sizes as default.
+    local X = self.instance.AbsoluteSize.X
+    local Y = self.instance.AbsoluteSize.Y
+
+    -- If there are custom sizes, declares it.
+    if self.properties.Custom then
+        X = self.properties.Custom.Size.X
+        Y = self.properties.Custom.Size.Y
+    end
+
+    -- Adds an element to the list with calculated properties.
     self:addElement({
         Type = "UIAspectRatioConstraint",
         Name = "AspectRatio",
         Properties = {
-            AspectRatio = self.instance.AbsoluteSize.X / self.instance.AbsoluteSize.Y,
+            AspectRatio = X / Y,
             AspectType = "FitWithinMaxSize",
             DominantAxis = "Width"
         }
@@ -194,6 +292,12 @@ end
 -- Destroys interface element.
 function class:destroy()
     if self.metadata then self.metadata:reset() end
+
+    for _, value in pairs(self.events) do value:Disconnect() end
+    self.instance:Destroy()
+
+    -- Removes interface element from the parent elements list.
+    self:getParent():getElements()[self.id] = nil
 end
 
 

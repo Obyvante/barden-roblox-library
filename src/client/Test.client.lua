@@ -10,24 +10,6 @@ local InterfaceService = Library.getService("InterfaceService")
 -- TEMPLATES
 local MetadataTemplate = Library.getTemplate("Metadata")
 
-
-local interface = InterfaceService.create("Challanage-1")
-
-local frame = interface:addElement({
-    Type = "Frame",
-    Name = "frame",
-    Properties = {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-
-        Size = UDim2.fromScale(0.75, 0.5),
-        Position = UDim2.fromScale(0.5, 0.5),
-        BorderSizePixel = 0,
-
-        BackgroundColor3 = Color3.fromRGB(255, 0, 0),
-        BackgroundTransparency = 0.5
-    },
-    BuildWith = {
-        "AspectRatio"
-    }
-})
-:getInterface():build(game.Players.LocalPlayer.PlayerGui)
+-- UIs
+local ChallangeUI = require(game:GetService("ReplicatedStorage").Interfaces.Challange.Challange)
+ChallangeUI.create(game.Players.LocalPlayer)

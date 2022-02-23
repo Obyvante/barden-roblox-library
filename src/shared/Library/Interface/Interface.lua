@@ -12,10 +12,12 @@ local InterfaceElement = require(script.Parent:WaitForChild("InterfaceElement"))
 
 -- Creates an interface.
 -- @param _id Interface id.
+-- @param _viewport Interface viewport. (BASED ON)
 -- @return Created interface.
-function class.create(_id : string)
+function class.create(_id : string, _viewport : Vector2)
     -- Object nil checks.
     assert(_id ~= nil, "Interface id cannot be null")
+    assert(_viewport ~= nil, "Interface(" .. _id .. ") viewport cannot be null")
 
     local _screen = Instance.new("ScreenGui")
     _screen.Name = _id
@@ -26,6 +28,7 @@ function class.create(_id : string)
     return setmetatable({
         ["id"] = _id,
         ["screen"] = _screen,
+        ["viewport"] = _viewport,
         ["elements"] = {}
     }, class)
 end
@@ -49,6 +52,18 @@ end
 -- @return Interface screen. (Screen Gui)
 function class:getScreen()
     return self.screen
+end
+
+-- Gets interface viewport.
+-- @return Interface viewport. (VECTOR2)
+function class:getViewport()
+    return self.viewport
+end
+
+-- Gets interface elements.
+-- @return Interface elements.
+function class:getElements()
+    return self.elements
 end
 
 -- Gets interface element by its id.
