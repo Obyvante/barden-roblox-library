@@ -2,6 +2,7 @@ local class = {}
 class.__index = class
 -- IMPORTS
 local TableService = require(script.Parent.Parent:WaitForChild("Services"):WaitForChild("TableService"))
+local EventBinder = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("EventBinder"))
 local Metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata"))
 -- STARTS
 
@@ -22,7 +23,6 @@ function class.new(_interface : ModuleScript, _data : table, _parent : Folder)
     _element["interface"] = _interface
     _element["parent"] = _parent
     _element["id"] = _data.Name
-    _element["events"] = {}
     _element["elements"] = {}
 
     -- Creates an instance based on interface element type.
@@ -38,8 +38,13 @@ function class.new(_interface : ModuleScript, _data : table, _parent : Folder)
 
     -- Adds events to the created instance.
     if _data.Events then
+        _element["event_binder"] = EventBinder.new(_element)
         for _, _event in ipairs(_data.Events) do
-            _element:bindEvent(_event)
+            if _event.BindTo ~= nil then
+                _element["event_binder"]:bind(_event.BindTo, _event)
+            else
+                _element["event_binder"]:bind(_element["instance"][_event.Event], _event)
+            end
         end
     end
 
@@ -47,7 +52,26 @@ function class.new(_interface : ModuleScript, _data : table, _parent : Folder)
     if _data.BuildWith then
         for _, _build in ipairs(_data.BuildWith) do
             if _build == "AspectRatio" then
-                _element:addAspectRatio()
+                -- Gets abosule sizes as default.
+                local X = _element.instance.AbsoluteSize.X
+                local Y = _element.instance.AbsoluteSize.Y
+
+                -- If there are custom sizes, declares it.
+                if _element.properties.Custom then
+                    X = _element.properties.Custom.Size.X
+                    Y = _element.properties.Custom.Size.Y
+                end
+
+                -- Adds an element to the list with calculated properties.
+                _element:addElement({
+                    Type = "UIAspectRatioConstraint",
+                    Name = "AspectRatio",
+                    Properties = {
+                        AspectRatio = X / Y,
+                        AspectType = "FitWithinMaxSize",
+                        DominantAxis = "Width"
+                    }
+                })
             else
                 warn(_element:getLogPrefix() .. " build with(" .. _build .. ") is not exsist")
             end
@@ -61,9 +85,16 @@ end
 -- @return Metadata.
 function class:getMetadata()
     if not self.metadata then
-        self.metadata = require(script.Parent.Parent:WaitForChild("Templates"):WaitForChild("Metadata")).new()
+        self.metadata = Metadata.new()
     end
     return self.metadata
+end
+
+-- Gets event binder.
+-- @return Interface element event binder.
+function class:getEventBinder()
+    if not self.event_binder then self.event_binder = EventBinder.new(self) end
+    return self.event_binder
 end
 
 -- Gets log prefix.
@@ -122,6 +153,7 @@ function class:updateProperties(_properties : table)
     if _properties.Custom then
         -- Declares required fields.
         local viewport = self.interface:getViewport()
+        local ratio = viewport.X / viewport.Y
         local anchor_point = _properties.AnchorPoint
         local should_calculate_anchor = anchor_point ~= nil and (anchor_point.X ~= 0 or anchor_point.Y ~= 0)
         local has_parent = self.parent ~= nil
@@ -133,10 +165,16 @@ function class:updateProperties(_properties : table)
 
         -- Handles custom size.
         if _properties.Custom.Size then
+            -- Early check to handle safety.
+            assert(_properties.Custom.Position ~= nil, "To set custom size, there must be also a custom position")
+
             local _data = _properties.Custom.Size
             local X, Y
 
             if has_parent then
+                -- Early check to handle safety.
+                assert(parent_properties_custom ~= nil and parent_properties_custom.Size ~= nil, "To set custom size with parent, there must be also a custom sized parent")
+
                 local parent_size = parent_properties_custom.Size
 
                 X = _data.X / parent_size.X
@@ -148,14 +186,19 @@ function class:updateProperties(_properties : table)
 
             self.instance.Size = UDim2.fromScale(X, Y)
         end
-        
 
         -- Handles custom size.
         if _properties.Custom.Position then
+            -- Early check to handle safety.
+            assert(_properties.Custom.Size ~= nil, "To set custom position, there must be also a custom size")
+
             local _data = _properties.Custom.Position
             local X, Y
                 
             if has_parent then
+                -- Early check to handle safety.
+                assert(parent_properties_custom ~= nil and parent_properties_custom.Size ~= nil, "To set custom position with parent, there must be also a custom sized parent")
+
                 local parent_size = parent_properties_custom.Size
 
                 if should_calculate_anchor then
@@ -183,50 +226,44 @@ function class:updateProperties(_properties : table)
 
             self.instance.Position = UDim2.fromScale(X, Y)
         end
+
+        -- Handles custom font size.
+        -- TODO: will add custom font size.
+        if _properties.Custom.FontSize then
+            -- Early check to handle safety.
+            assert(parent_properties_custom ~= nil and parent_properties_custom.Size ~= nil, "To set custom font size, there must be also a custom sized parent")
+
+            local font_size = _properties.Custom.FontSize
+
+            -- Sets text size to 1 since we are going to use tricky "UIScale" to scale our font size.
+            self.instance.TextSize = 1
+            self:addElement({
+                Name = "TextScale",
+                Type = "UIScale",
+                Properties = {
+                    Scale = font_size * (workspace.CurrentCamera.ViewportSize.X / viewport.X)
+                },
+                Events = {
+                    {
+                        Name = "Font Size Calculation",
+                        BindTo = workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"),
+                        Consumer = function(_binder)
+                            -- Waits heartbeat to update viewport size.
+                            game:GetService("RunService").Heartbeat:Wait()
+        
+                            -- Calculates font size ratio.
+                            local font_size_ratio = self.parent:getInstance().AbsoluteSize.X / parent_properties_custom.Size.X
+        
+                            -- Updates font size with using "UISize" object. (HACKY SOLUTION)
+                            _binder:getParent():updateProperties({
+                                Scale = font_size * font_size_ratio
+                            })
+                        end
+                    }
+                }
+            })
+        end
     end
-
-    return self
-end
-
--- Gets event by its id.
--- @param _id Event id.
--- @return Interface element event.
-function class:getEvent(_id : string)
-    -- Object nil checks.
-    assert(_id ~= nil, self:getLogPrefix() .. " event id cannot be null[get event]")
-    return self.events[_id]
-end
-
--- Creates an event and binds to the interface element.
--- @param _event Event data.
--- @return Interface element. (BUILDER)
-function class:bindEvent(_event : table)
-    -- Object nil checks.
-    assert(_event ~= nil, self:getLogPrefix() .. " event data cannot be null")
-    assert(self.events[_event.Name] == nil, self:getLogPrefix() .. " event(" .. _event.Name .. ") is already exsist[bind]")
-
-    -- Connects an event to the interface element.
-    self.events[_event.Name] = self.instance[_event.Type]:Connect(function(...)
-        -- Creates event data to pass as argument.
-        local data = {
-            element = self
-        }
-        -- Runs declared consumer(function) with declared arguments.
-        _event.Consumer(data, ...)
-    end)
-    return self
-end
-
--- Unbinds target event.
--- @param _id Event id.
--- @return Interface element. (BUILDER)
-function class:unbindEvent(_id : string)
-    -- Object nil checks.
-    assert(_id ~= nil, self:getLogPrefix() .. " event id cannot be null")
-    assert(self.events[_id] ~= nil, self:getLogPrefix() .. " event(" .. _id .. ") is not exsist[unbind]")
-
-    self:getEvent(_id):Disconnect()
-    self.events[_id] = nil
 
     return self
 end
@@ -263,37 +300,10 @@ function class:addElement(_data : string)
     return element
 end
 
--- Adds configured aspect ratio to interface element.
--- @return Interface element. (BUILDER)
-function class:addAspectRatio()
-    -- Gets abosule sizes as default.
-    local X = self.instance.AbsoluteSize.X
-    local Y = self.instance.AbsoluteSize.Y
-
-    -- If there are custom sizes, declares it.
-    if self.properties.Custom then
-        X = self.properties.Custom.Size.X
-        Y = self.properties.Custom.Size.Y
-    end
-
-    -- Adds an element to the list with calculated properties.
-    self:addElement({
-        Type = "UIAspectRatioConstraint",
-        Name = "AspectRatio",
-        Properties = {
-            AspectRatio = X / Y,
-            AspectType = "FitWithinMaxSize",
-            DominantAxis = "Width"
-        }
-    })
-    return self
-end
-
 -- Destroys interface element.
 function class:destroy()
     if self.metadata then self.metadata:reset() end
-
-    for _, value in pairs(self.events) do value:Disconnect() end
+    if self.event_binder then self.event_binder:destroy() end
     self.instance:Destroy()
 
     -- Removes interface element from the parent elements list.
