@@ -58,9 +58,25 @@ function class.POST(_url : string, _body : string, _metadata : table)
             request.Headers[key] = value
         end
     end
-
+    
     -- Sends and return request response.
     return HttpService:RequestAsync(request)
+end
+
+-- Decodes json and converts to a table.
+-- @return Table. (DECODED JSON)
+function class.decodeJson(_json : string)
+    -- Object nil checks.
+    assert(_json ~= nil, "Json cannot be null")
+    return HttpService:JSONDecode(_json)
+end
+
+-- Encodes table and converts to a json string.
+-- @return Json string. (ENCODED TABLE)
+function class.encodeJson(_table : table)
+    -- Object nil checks.
+    assert(_table ~= nil, "Table cannot be null")
+    return HttpService:JSONEncode(_table)
 end
 
 
