@@ -68,6 +68,11 @@
       "Project": {
         "$className": "Project",
         "$path": "src/shared/Project"
+      },
+
+      "Events": {
+        "$className": "Folder",
+        "$path": "src/events"
       }
     }
   }
