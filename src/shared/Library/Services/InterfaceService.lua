@@ -76,7 +76,7 @@ function class.createScreen(_id : string, _viewport : Vector2)
     assert(_interfaces[_id] == nil, "Interface(" .. _id .. ") is already exist")
 
     -- Creates an interface.
-    local interface = Interface.create(_id, _viewport)
+    local interface = Interface.createScreen(_id, _viewport)
     -- Adds created interface to the list.
     _interfaces[_id] = interface
 
