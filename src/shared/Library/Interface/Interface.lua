@@ -5,17 +5,40 @@ local InterfaceElement = require(script.Parent:WaitForChild("InterfaceElement"))
 -- STARTS
 
 
--------------
--- TODO: will add static dictionary.
--- with this, we can get by its id and garbage collector
--- will not touch it since it'll have a reference.
--------------
-
--- Creates an interface.
+-- Creates an interface for billboard gui.
 -- @param _id Interface id.
 -- @param _viewport Interface viewport. (BASED ON)
 -- @return Created interface.
-function class.create(_id : string, _viewport : Vector2)
+function class.createBillboard(_id : string, _viewport : Vector2, _properties : table)
+    -- Object nil checks.
+    assert(_id ~= nil, "Interface id cannot be null")
+    assert(_viewport ~= nil, "Interface(" .. _id .. ") viewport cannot be null")
+
+    local _screen = Instance.new("BillboardGui")
+    _screen.Name = _id
+    _screen.ResetOnSpawn = false
+
+    -- Sets billboard properties.
+    if _properties then
+        for key, value in pairs(_properties) do
+            _screen[key] = value
+        end
+    end
+
+    -- Sets metatable then returns it.
+    return setmetatable({
+        ["id"] = _id,
+        ["screen"] = _screen,
+        ["viewport"] = _viewport,
+        ["elements"] = {}
+    }, class)
+end
+
+-- Creates an interface for screen gui.
+-- @param _id Interface id.
+-- @param _viewport Interface viewport. (BASED ON)
+-- @return Created interface.
+function class.createScreen(_id : string, _viewport : Vector2)
     -- Object nil checks.
     assert(_id ~= nil, "Interface id cannot be null")
     assert(_viewport ~= nil, "Interface(" .. _id .. ") viewport cannot be null")
@@ -50,7 +73,7 @@ function class:getId()
 end
 
 -- Gets interface screen.
--- @return Interface screen. (Screen Gui)
+-- @return Interface screen. (Screen Gui, Billboard Gui etc.)
 function class:getScreen()
     return self.screen
 end
