@@ -82,6 +82,7 @@ end
 ----------
 -- INITIALIZATION
 ----------
+local time = os.time()
 
 -- Handles client and server side libraries.
 if RunService:IsClient() then
@@ -95,7 +96,7 @@ elseif RunService:IsServer() then
 end
 
 -- Informs console that library has been loaded.
-print("Barden Roblox Library(" .. (RunService:IsClient() and "client" or "server") .. ") has been initialized!")
+print("✔️ Barden Roblox Library(" .. (RunService:IsClient() and "client" or "server") .. ") has been initialized!")
 
 
 -- ENDS
