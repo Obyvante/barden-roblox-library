@@ -37,16 +37,7 @@ function class.new(_interface : ModuleScript, _data : table, _parent : Folder)
     instance.Parent = if not _parent then _interface:getScreen() else _parent:getInstance()
 
     -- Adds events to the created instance.
-    if _data.Events then
-        _element["event_binder"] = EventBinder.new(_element)
-        for _, _event in ipairs(_data.Events) do
-            if _event.BindTo ~= nil then
-                _element["event_binder"]:bind(_event.BindTo, _event)
-            else
-                _element["event_binder"]:bind(_element["instance"][_event.Event], _event)
-            end
-        end
-    end
+    if _data.Events then _element:updateEvents(_data.Events) end
 
     -- Adds builds to the created instance.
     if _data.BuildWith then
@@ -275,6 +266,9 @@ function class:setFontSize(_size : number)
         -- Waits heartbeat to update viewport size.
         game:GetService("RunService").Heartbeat:Wait()
 
+        -- Safety check.
+        if self.parent:getInstance() == nil then return end
+
         -- Calculates font size ratio.
          local font_size_ratio = self.parent:getInstance().AbsoluteSize.X / parent_size.X
 
@@ -310,13 +304,23 @@ function class:setFontSize(_size : number)
     
         -- Handles text rescale.
         task.spawn(function()
+            -- Calls consumer function.
             _consumer(text_scale:getEventBinder())
+            -- Safety check.
+            if self.parent:getInstance() == nil then return end
+
+            -- Makes text previous text transparency.
             self.instance.TextTransparency = previous_transparency
         end)
     else
         -- Handles text rescale.
         task.spawn(function()
+            -- Calls consumer function.
             _consumer(self:getElement("scale"):getEventBinder())
+            -- Safety check.
+            if self.parent:getInstance() == nil then return end
+
+            -- Makes text previous text transparency.
             self.instance.TextTransparency = previous_transparency
         end)
     end
@@ -376,6 +380,25 @@ end
 ------------------------
 -- ACTIONS (STARTS)
 ------------------------
+
+-- Updates interface events.
+-- @param _events Events.
+-- @return Interface element. (BUILDER)
+function class:updateEvents(_events : table)
+    -- Object nil checks.
+    assert(_events ~= nil, self:getLogPrefix() .. " events cannot be null")
+
+    local event_binder = self:getEventBinder()
+    for _, _event in ipairs(_events) do
+        if _event.BindTo ~= nil then
+            event_binder:bind(_event.BindTo, _event)
+        else
+            event_binder:bind(self.instance[_event.Event], _event)
+        end
+    end
+
+    return self
+end
 
 -- Updates interface element instance.
 -- @param _properties Interface element instance properties.
