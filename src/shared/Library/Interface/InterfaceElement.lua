@@ -284,6 +284,9 @@ function class:setFontSize(_size : number)
         })
     end
 
+    local previous_transparency = self.instance.TextTransparency
+    self.instance.TextTransparency = 1
+
     -- Handles previous font size.
     if self:getFontSize() == nil then
         -- Configures default text size and transparency to wait process to be done.
@@ -308,11 +311,13 @@ function class:setFontSize(_size : number)
         -- Handles text rescale.
         task.spawn(function()
             _consumer(text_scale:getEventBinder())
+            self.instance.TextTransparency = previous_transparency
         end)
     else
         -- Handles text rescale.
         task.spawn(function()
             _consumer(self:getElement("scale"):getEventBinder())
+            self.instance.TextTransparency = previous_transparency
         end)
     end
 
