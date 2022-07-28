@@ -252,7 +252,6 @@ metadata.set({name: "test"}, "object value")
 metadata.set("expirable-key", "my value", 10, function(_metadata)
   print("key expired! -> " .. _metadata.has("expirable-key"))
 end)
-})
 ```
 
 ### Interfaces
